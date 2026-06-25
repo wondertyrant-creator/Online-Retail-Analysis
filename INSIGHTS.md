@@ -113,7 +113,7 @@ Note: the excluded_bad_price count (43,887) is higher than a simple count of zer
 | GIN AND TONIC DIET METAL SIGN | 498 | 2,030 | 408% |
 
 **Important note on return rates above 100%:**
-These occur when returns span order periods outside the dataset window — a customer may have bought a product before December 2010 and returned it within our 13-month window, meaning the return count exceeds the visible sales count. These rows are flagged as "Review" in the `data_flag` column and should be investigated by someone with domain knowledge rather than treated as data errors.
+These occur when returns span order periods outside the dataset window — a customer may have bought a product before December 2010 and returned it within our 13-month window, meaning the return count exceeds the visible sales count.
 
 **Key findings:**
 - PAPER CRAFT, LITTLE BIRDIE (top 2nd revenue product) had its entire £168k almost entirely negated by a single return — most likely a defective batch or recalled product
