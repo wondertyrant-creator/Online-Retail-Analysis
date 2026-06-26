@@ -142,3 +142,18 @@ Full findings with data tables and recommendations: see [INSIGHTS.md](./INSIGHTS
 - `HAVING` for post-aggregation filtering (minimum order count)
 - `CREATE INDEX` on `order_date`, `year_month`, `customer_id`, `country`
 - `DATE_FORMAT`, `MONTHNAME`, `QUARTER` for date component extraction
+
+
+## DAX Techniques Used
+
+- `SUM`, `DISTINCTCOUNT`, `COUNTROWS` for aggregation across filtered contexts
+- `CALCULATE` to modify filter context — used in every segment and RFM measure
+- `DIVIDE` for safe division that returns blank rather than an error on zero denominators
+- `FILTER` with `VALUES` for row-level conditions within an aggregation
+- `VAR ... RETURN` to store intermediate results and keep complex measures readable
+- `DATEADD` for time intelligence — shifting context back one month for MoM growth
+- `ALL` to remove filter context for percentage-of-total calculations
+- `FORMAT` to output numbers as formatted percentage strings
+- `AND` function for combining multiple conditions inside `FILTER`
+- Conditional measures using `CALCULATE` with inline filter arguments (e.g. `rfm_segment = "Champions"`)
+- `_Measures` table to centralise all measures separate from data tables
