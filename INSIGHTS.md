@@ -3,6 +3,26 @@
 Analysis of UCI Online Retail dataset covering December 2010 – December 2011.
 All figures are derived from the SQL views built on the cleaned dataset (487,398 rows).
 
+Revenue is highly concentrated: the top 20% of identified customers generate 75% of sales, while Champion customers alone contribute 65% of identified-customer revenue. Revenue increased sharply from September to November 2011, although only one annual cycle is available, preventing confirmation of seasonal patterns. Several international markets, particularly the Netherlands, Australia, and EIRE, exhibit exceptionally high average order values, suggesting a small number of high-value accounts. Finally, approximately 16.5% of revenue is associated with guest customers, limiting customer retention analysis and highlighting an opportunity to improve customer identification.
+
+---
+
+## Limitations
+
+Being transparent about what the data can and cannot support strengthens the credibility of any finding that follows.
+
+**One year of data:** The dataset covers just over 13 months — from December 2010 to 9 December 2011. Any pattern described as seasonal or recurring (such as the Q4 revenue ramp) is observed within a single annual cycle. Additional years of data would be needed to confirm whether these patterns repeat consistently.
+
+**Partial December 2011:** The dataset ends on 9 December 2011, meaning December figures represent only 9 days of trading. December revenue, AOV, and cancellation numbers should not be compared directly to other months.
+
+**Wholesale rather than retail:** The customer base appears to be primarily wholesale or trade buyers rather than end consumers. Average order values (£518), average units per order (222), and country-level AOV figures (Netherlands: £2,929) are all consistent with bulk buying behaviour. Retail benchmarks — typical AOV around £30–60, typical basket of 2–4 items — do not apply here.
+
+**Guest customers limit retention tracking:** Approximately 25% of raw rows have no CustomerID. These are included in revenue totals but excluded from all customer-level analysis (RFM, repeat rate, top customers). A significant portion of buying behaviour is therefore unobservable.
+
+**Return rates can exceed 100% by units:** The product return rate analysis compares returns within the 13-month window against sales within the same window. If a product was purchased before December 2010 and returned within the window, units returned will exceed visible units sold — producing rates above 100%. These are flagged as "Review" and should be investigated with domain knowledge rather than treated as data errors.
+
+**Correlation vs causation:** Findings describe patterns in the data. Explanations for why those patterns exist (e.g. Netherlands buyers being wholesale accounts) are reasonable inferences but are not confirmed by the data itself.
+
 ---
 
 ## Summary Numbers
@@ -23,17 +43,23 @@ All figures are derived from the SQL views built on the cleaned dataset (487,398
 
 ---
 
-## Data Quality Summary
+## Data Quality
 
 | Exclusion | Rows | Reason |
 |---|---|---|
-| Cancelled invoices | 9,288 | InvoiceNo begins with C |
-| Negative quantities | 1,336 | Returns not tagged as cancellations |
-| Zero or invalid unit prices | 43,887 | Includes empty values and non-numeric entries cast to 0 |
+| Cancelled invoices (`C%` prefix) | 9,288 | Order reversals, not sales |
+| Negative quantities | 1,336 | Returns logged without cancellation prefix |
+| Zero or invalid unit prices | 43,887 | Includes empty values — MySQL CAST returns 0 for non-numeric entries |
 | **Total excluded** | **54,511** | |
-| **Clean rows retained** | **487,398** | **89.9% of raw data** |
+| **Clean rows retained** | **487,398** | **89.9%** |
 
-Note: the excluded_bad_price count (43,887) is higher than a simple count of zero-price rows because MySQL's CAST returns 0 for empty strings and non-numeric values — all of which are correctly excluded.
+The `excluded_bad_price` count of 43,887 is higher than a simple count of zero-price rows because MySQL's `CAST` function returns 0 for empty strings and non-numeric values — all of which are correctly excluded from analysis.
+
+---
+
+## Dashboard — Executive Overview
+
+![Executive Overview](Executive_Overview.png)
 
 ---
 
@@ -55,16 +81,15 @@ Note: the excluded_bad_price count (43,887) is higher than a simple count of zer
 | 2011-09 | £1,014,569 | 1,821 | £557 | +38.9% |
 | 2011-10 | £1,104,056 | 2,029 | £544 | +8.8% |
 | 2011-11 | £1,455,751 | 2,747 | £530 | +31.9% |
-| 2011-12 | £621,955 | 819 | £759 | -57.3% (partial — ends 9 Dec) |
+| 2011-12 | £621,955 | 819 | £759 | -57.3% (partial month) |
 
-**Key findings:**
-- Revenue was volatile in H1 2011, ranging from £505k to £744k
-- A consistent Q4 ramp-up began in September 2011 (+38.9% MoM)
-- November 2011 was the peak at £1.46M — nearly 3× February
-- The December drop is a data boundary effect, not a real decline (only 9 days of data)
-- AOV peaked in January 2011 (£619) due to a large bulk order, and again in December (£759) for the same reason
+**Findings:**
+- Revenue was volatile in H1 2011, ranging from £505k to £744k with no consistent direction
+- Revenue increased sharply from September 2011 onwards — September +38.9%, October +8.8%, November +31.9%
+- November 2011 was the highest month at £1.46M — nearly 3× February
+- The December drop (-57.3%) is a data boundary effect, not a business signal. December 2011 has only 9 days of data
 
-**Recommendation:** Plan stock, fulfilment capacity, and marketing spend ahead of September each year. The Q4 ramp-up is consistent and predictable.
+**Caveat on seasonality:** The September–November ramp is a notable pattern within this dataset. However, with only one year of data it is not possible to confirm that this recurs annually. If this were a live business, the appropriate next step would be to request the prior year's data before drawing conclusions about seasonal planning cycles.
 
 ---
 
@@ -87,13 +112,17 @@ Note: the excluded_bad_price count (43,887) is higher than a simple count of zer
 | ASSORTED COLOUR BIRD ORNAMENT | 36,461 | 1,455 | £59,095 |
 | CHILLI LIGHTS | 10,306 | 661 | £54,118 |
 
-**Key findings:**
-- PAPER CRAFT, LITTLE BIRDIE sold 80,995 units in a single order (customer 16446) — one transaction generated £168k
-- MEDIUM CERAMIC TOP STORAGE JAR sold 78,033 units across only 247 orders — another bulk buyer pattern
-- REGENCY CAKESTAND spread £174k across 1,988 orders — consistent retail demand at higher unit price
-- WHITE HANGING HEART appeared in 2,256 distinct orders — the most broadly purchased product in the top 10
+**Findings:**
+- PAPER CRAFT, LITTLE BIRDIE generated £168k from a single order — one customer (16446) bought 80,995 units. This is an outlier, not a measure of consistent product demand
+- MEDIUM CERAMIC TOP STORAGE JAR sold 78,033 units across only 247 orders — another bulk buying pattern
+- REGENCY CAKESTAND spread similar revenue across 1,988 distinct orders — a more reliable signal of consistent demand
+- WHITE HANGING HEART T-LIGHT HOLDER appeared in 2,256 orders — the most broadly purchased product in the top 10
 
-**Recommendation:** Distinguish bulk-driven revenue (PAPER CRAFT, MEDIUM CERAMIC) from consistent demand products (REGENCY CAKESTAND, WHITE HANGING HEART). Forecasting and restocking strategies should differ between these two types.
+---
+
+## Dashboard — Product Analysis
+
+![Product Analysis](Product_Analysis.png)
 
 ---
 
@@ -101,32 +130,25 @@ Note: the excluded_bad_price count (43,887) is higher than a simple count of zer
 
 **View:** `vw_product_return_rate`
 
-**Top products by units returned:**
+| Product | Units Sold | Units Returned | Return Rate | Flag |
+|---|---|---|---|---|
+| CREAM HANGING HEART T-LIGHT HOLDER | 61 | 2,578 | 4,226% | Review |
+| SET OF 36 VINTAGE CHRISTMAS DOILIES | 38 | 325 | 855% | Review |
+| GEMSTONE CHANDELIER T-LIGHT HOLDER | 78 | 433 | 555% | Review |
+| ENAMEL BOWL PANTRY | 24 | 121 | 504% | Review |
+| GIN AND TONIC DIET METAL SIGN | 498 | 2,030 | 408% | Review |
 
-| Product | Units Sold | Units Returned | Return Rate |
-|---|---|---|---|
-| CREAM HANGING HEART T-LIGHT HOLDER | 61 | 2,578 | 4,226% |
-| SET OF 36 VINTAGE CHRISTMAS DOILIES | 38 | 325 | 855% |
-| GEMSTONE CHANDELIER T-LIGHT HOLDER | 78 | 433 | 555% |
-| ENAMEL BOWL PANTRY | 24 | 121 | 504% |
-| PAINTED HEART WREATH WITH BELL | 12 | 60 | 500% |
-| GIN AND TONIC DIET METAL SIGN | 498 | 2,030 | 408% |
+**Note on rates above 100%:** As described in the Limitations section, these occur when returns span purchase periods outside the dataset window. These rows are flagged "Review" and should be investigated with product and operations knowledge before drawing conclusions.
 
-**Important note on return rates above 100%:**
-These occur when returns span order periods outside the dataset window — a customer may have bought a product before December 2010 and returned it within our 13-month window, meaning the return count exceeds the visible sales count.
-
-**Key findings:**
-- PAPER CRAFT, LITTLE BIRDIE (top 2nd revenue product) had its entire £168k almost entirely negated by a single return — most likely a defective batch or recalled product
-- MEDIUM CERAMIC TOP STORAGE JAR had a similarly high return value relative to sales
-- A small number of products are responsible for a disproportionate share of returns
-
-**Recommendation:** Investigate the top return-rate products with the product and operations teams. High-return products are both a customer satisfaction risk and a revenue risk.
+**Findings:**
+- PAPER CRAFT, LITTLE BIRDIE and MEDIUM CERAMIC TOP STORAGE JAR both show near-complete revenue reversal through returns. One possible explanation is a defective batch or product recall — but this cannot be confirmed from the transaction data alone
+- A small number of products account for a disproportionate share of return volume
 
 ---
 
 ## 4. Average Order Value and Basket Size
 
-**View:** `vw_avg_order_value`, `vw_basket_size_by_month`, `vw_basket_size_by_country`
+**View:** `vw_avg_order_value`, `vw_basket_size_by_country`
 
 | Metric | Value |
 |---|---|
@@ -134,9 +156,7 @@ These occur when returns span order periods outside the dataset window — a cus
 | Avg units per order | 222 |
 | Avg lines per order | 24.6 |
 
-**Context:** These figures are significantly higher than typical retail averages. This reflects the wholesale nature of the customer base — individual orders frequently involve hundreds or thousands of units. This is consistent with the high AOV seen in markets like the Netherlands and Australia.
-
-**AOV by month:** Ranged from £411 (April 2011) to £759 (December 2011). The December figure is driven by partial-month large orders and should not be treated as a trend.
+**Context:** These metrics are significantly higher than retail norms (typically £30–60 AOV, 2–4 items). This reflects wholesale buying behaviour — individual orders regularly involve hundreds or thousands of units. These numbers should be interpreted in that context rather than benchmarked against retail industry averages.
 
 **Basket size by country (top 5 by AOV):**
 
@@ -146,12 +166,11 @@ These occur when returns span order periods outside the dataset window — a cus
 | Australia | 57 | 1,191 | £2,331 |
 | Japan | 19 | 938 | £1,819 |
 | Hong Kong | 11 | 391 | £1,412 |
-| Denmark | 18 | 375 | £1,021 |
 | United Kingdom | 17,873 | ~217 | £518 |
 
-**Key finding:** The Netherlands averages £2,929 per order with 1,782 units — nearly 6× the UK average. With only 93 orders this strongly indicates wholesale or trade accounts, not retail customers.
-
-**Recommendation:** Investigate whether the Netherlands, Australia, and Japan represent deliberate wholesale channels. If they are, dedicated account management could scale this revenue stream.
+**Findings:**
+- The Netherlands generates £2,929 per order on average — 5.6× the UK average — across only 93 orders and 9 customers. This pattern is consistent with wholesale or trade accounts rather than retail buyers, though this cannot be confirmed without additional customer data
+- Australia and Japan show a similar pattern at a smaller scale
 
 ---
 
@@ -167,14 +186,14 @@ These occur when returns span order periods outside the dataset window — a cus
 | Germany | 457 | 94 | £221,333 | 2.2% |
 | France | 391 | 88 | £203,280 | 2.0% |
 | Australia | 57 | 9 | £132,852 | 1.3% |
-| Spain | 90 | 30 | £60,043 | 0.6% |
-| Switzerland | 54 | 22 | £54,578 | 0.5% |
 
-**Key finding:** EIRE has only 4 unique customers generating £272k — an average of £68k per customer. The Netherlands has 9 customers generating £272k — £30k each. Both strongly suggest a small number of high-value wholesale accounts rather than retail customers.
+**Findings:**
+- EIRE generates £272k from just 4 customers — an average of £68k per customer. This is a notable concentration of revenue in very few accounts
+- The Netherlands indicates  a similar pattern — 9 customers, £272k, averaging £30k each
 
 ---
 
-## 6. Customer Segments — One-time vs Repeat
+## 6. One-time vs Repeat Customers
 
 **View:** `vw_customer_segments`
 
@@ -183,25 +202,25 @@ These occur when returns span order periods outside the dataset window — a cus
 | One-time buyer | 1,499 | £590,927 | £394 | 1.0 |
 | Repeat buyer | 2,829 | £7,928,174 | £2,802 | 6.0 |
 
-**Key findings:**
-- Repeat buyers are 65.4% of identified customers but account for **93.1% of identified-customer revenue**
-- The average repeat buyer spends 7.1× more than a one-time buyer (£2,802 vs £394)
-- 1,499 one-time buyers represent an opportunity — converting even 10% to repeat buyers would meaningfully increase revenue
+**Findings:**
+- Repeat buyers represent 65.4% of identified customers and 93.1% of identified-customer revenue
+- The average repeat buyer generated seven times more revenue on average than a one-time buyer (£2,802 vs £394)
 
-**Recommendation:** Invest in early retention activity targeted at first-time buyers — follow-up communications, product recommendations, or loyalty incentives in the weeks after their first purchase.
+**Caveat:** The one-time vs repeat split is based on the 13-month observation window. A customer classified as one-time may have purchased before December 2010 or after December 2011 — the data cannot confirm their full relationship with the business.
 
 ---
 
-## 7. RFM Customer Segmentation
+## Dashboard — Customer Analysis
+
+![Customer Analysis](Customer_Analysis.png)
+
+---
+
+## 7. RFM Segmentation
 
 **View:** `vw_rfm`, `vw_rfm_summary`
 
-Each identified customer (excluding Guest) is scored 1–5 on three dimensions relative to the full customer base using NTILE(5):
-- **Recency** — days since last order (score 5 = most recent)
-- **Frequency** — number of distinct orders (score 5 = most frequent)
-- **Monetary** — total spend (score 5 = highest spender)
-
-Segment labels are assigned by combining R and F scores.
+Each identified customer is scored 1–5 on Recency, Frequency, and Monetary using `NTILE(5)` relative to the full customer base. Score 5 is best on every dimension. Segment labels are assigned by combining R and F scores.
 
 | Segment | Customers | Avg Days Since Purchase | Avg Orders | Avg Spend | Total Revenue |
 |---|---|---|---|---|---|
@@ -213,41 +232,31 @@ Segment labels are assigned by combining R and F scores.
 
 **Champions revenue share:** £5,553,398 / £8,519,102 = **65.2% of identified-customer revenue**
 
-**Key findings:**
-- Champions are 22.7% of identified customers but generate 65.2% of identified-customer revenue
-- Champions average 10.8 orders each — the business depends heavily on this group's continued engagement
-- At Risk customers averaged 3.7 orders historically but haven't bought in ~4 months — £730k in potentially recoverable revenue
-- Recent customers bought within 18 days on average but have only 1 order — they are the natural pipeline for Loyal and Champion segments
-- Inactive customers (1,499 people, 34.6% of base) have low frequency and spend — broad re-engagement campaigns are unlikely to be cost-effective
+**Findings:**
+- Champions — 22.7% of identified customers — account for 65.2% of identified-customer revenue and average 10.8 orders at £5,667 each
+- At Risk customers averaged 3.7 orders historically but have not purchased in approximately 4 months (avg 125 days). They represent £730k in spend that has gone quiet within the observation window
+- Recent customers have bought within the last 18 days on average but placed only one order each — they are the natural pipeline into the Loyal and Champion segments
 
-**Recommendations:**
-- **Protect Champions** — understand what drives their behaviour and prioritise their experience. Any churn in this group has an outsized revenue impact
-- **Re-engage At Risk** — 526 customers with proven purchase history who have gone quiet. Targeted outreach with personalised offers is commercially justified given £730k at stake
-- **Nurture Recent** — early retention activity for the 233 newest customers while they are still engaged
-- **Deprioritise Inactive** — average spend of £445 and very low order frequency makes broad campaigns unlikely to be cost-effective
+**Caveat on RFM scores:** Scores are relative to this specific dataset and customer base. A customer scored 5 on recency simply means they bought more recently than 80% of customers in this 13-month window — it does not carry over to a different dataset or time period.
 
 ---
 
-## 8. Revenue Concentration (Pareto Analysis)
+## 8. Revenue Concentration
 
 **View:** `vw_revenue_concentration`
 
 | Customer Decile | Customers | Revenue | % of Total | Cumulative % |
 |---|---|---|---|---|
-| Top 10% (Decile 1) | 433 | £5,267,961 | 61.8% | 61.8% |
-| 11–20% (Decile 2) | 433 | £1,117,944 | 13.1% | 75.0% |
-| 21–30% (Decile 3) | 433 | £686,828 | 8.1% | 83.0% |
-| 31–40% (Decile 4) | 433 | £465,365 | 5.5% | 88.5% |
-| 41–50% (Decile 5) | 433 | £326,190 | 3.8% | 92.3% |
-| 51–60% (Decile 6) | 433 | £238,364 | 2.8% | 95.1% |
-| 61–70% (Decile 7) | 433 | £170,701 | 2.0% | 97.1% |
-| 71–80% (Decile 8) | 433 | £123,015 | 1.4% | 98.6% |
-| 81–90% (Decile 9) | 432 | £80,619 | 0.9% | 99.5% |
-| Bottom 10% (Decile 10) | 432 | £42,114 | 0.5% | 100.0% |
+| Top 10% (D1) | 433 | £5,267,961 | 61.8% | 61.8% |
+| 11–20% (D2) | 433 | £1,117,944 | 13.1% | 75.0% |
+| 21–30% (D3) | 433 | £686,828 | 8.1% | 83.0% |
+| 31–40% (D4) | 433 | £465,365 | 5.5% | 88.5% |
+| 41–50% (D5) | 433 | £326,190 | 3.8% | 92.3% |
+| Bottom 50% (D6–D10) | 2,165 | £649,813 | 7.7% | 100.0% |
 
-**The top 20% of customers account for 75.0% of total identified-customer revenue.**
+**The top 20% of identified customers account for 75.0% of identified-customer revenue.**
 
-The Pareto principle holds strongly — revenue is highly concentrated. The top 10% alone account for 61.8% of revenue. This makes the Champions segment finding even more significant: protecting the top tier has a leverage effect far beyond their customer count.
+**Finding:** Revenue is highly concentrated in a small number of customers. This is consistent with a wholesale business model where a few large accounts drive the majority of volume. It also means the business carries meaningful customer concentration risk — the loss of a small number of key accounts would have a disproportionate revenue impact.
 
 ---
 
@@ -271,17 +280,13 @@ The Pareto principle holds strongly — revenue is highly concentrated. The top 
 | 2011-11 | £346,717 | £1,109,033 | 23.8% |
 | 2011-12 | £120,230 | £501,724 | 19.3% |
 
-**Key findings:**
-- Guest revenue share ranged from 10.4% (September and October) to 31.2% (December 2010)
-- The November 2011 spike in guest revenue (£346k, 23.8%) is unusual — worth investigating whether this was driven by a specific product or campaign
-- Guest share was lowest during peak Q4 months (September and October) when identified customers drove the growth
-- Without CustomerIDs, guest buyers cannot be tracked for retention, remarketing, or lifetime value analysis
-
-**Recommendation:** Introduce account creation incentives at checkout — a discount, early access, or loyalty points. Converting guest buyers to account holders would make retention analysis more complete and unlock remarketing options for a segment currently invisible to CRM.
+**Findings:**
+- Guest revenue share ranged from 10.4% to 31.2% across the period — the variation month to month is notable but there is not enough data to identify a trend
+- Without CustomerIDs, guest buyers cannot be tracked for retention, lifetime value, or remarketing
 
 ---
 
-## 10. Returns and Cancellations
+## 10. Cancellations
 
 **View:** `vw_returns_overview`
 
@@ -302,53 +307,29 @@ The Pareto principle holds strongly — revenue is highly concentrated. The top 
 | 2011-12 | 143 | £204,920 |
 | **Total** | **3,768** | **~£891,525** |
 
-**Cancellation rate:** 3,768 cancelled orders out of 22,064 placed orders (including cancellations) = **17.1%**
+**Cancellation rate:** 3,768 / (19,812 + 3,768) = **16.0% of all invoices placed**
 
-**Key findings:**
-- Cancelled order value was consistent at £25k–£83k for most months — structural rather than seasonal
-- January 2011 (£131k) and December 2011 (£205k) are outliers
-  - January: likely the MEDIUM CERAMIC TOP STORAGE JAR bulk order being returned
-  - December: large orders placed and reversed before shipment at the dataset boundary
-- The consistency across months confirms this is not caused by isolated events
-
-**Recommendation:** Investigate whether cancellations are concentrated in specific products, order sizes, or customer types. That breakdown would identify where to focus improvement efforts.
+**Findings:**
+- Cancelled order volume was relatively consistent across most months (215–436 orders)
+- January 2011 shows an elevated cancelled value (£131k). One possible explanation is the large MEDIUM CERAMIC TOP STORAGE JAR order being returned, though this cannot be confirmed from the aggregated view alone
+- December 2011 (£205k cancelled) coincides with the partial dataset boundary — large orders placed and reversed before the dataset end date is one possible explanation, but again this is an inference rather than a confirmed finding
+- The broad consistency in cancellation volume across months suggests this is a structural feature of operations rather than an isolated problem
 
 ---
 
-## Top Customers
+## Recommendations
 
-**View:** `vw_top_customers`
+These are directional suggestions based on the observed data patterns. Each is qualified by the limitations of the dataset.
 
-| Customer ID | Orders | Total Items | Total Spend |
+| Priority | Recommendation | Evidence | Caveat |
 |---|---|---|---|
-| 14646 | 72 | 162,938 | £267,416 |
-| 18102 | 60 | 64,124 | £259,657 |
-| 17450 | 46 | 69,993 | £194,551 |
-| 16446 | 2 | 80,997 | £168,473 |
-| 14911 | 201 | 60,182 | £137,402 |
-| 12415 | 21 | 61,748 | £119,391 |
-| 14156 | 55 | 46,364 | £113,355 |
-| 17511 | 31 | 47,966 | £85,913 |
-| 16029 | 63 | 40,208 | £81,025 |
-| 12346 | 1 | 74,215 | £77,184 |
-
-**Notable patterns:**
-- Customer 16446 spent £168k in just 2 orders (80,997 items) — the PAPER CRAFT bulk buyer
-- Customer 12346 spent £77k in a single order (74,215 units of MEDIUM CERAMIC TOP STORAGE JAR) — this was almost entirely returned
-- Customer 14911 placed 201 orders for £137k — a very different pattern of frequent smaller purchases
-- Customers 14646 and 18102 show consistent high-frequency, high-value behaviour — classic Champions
-
----
-
-## Overall Business Recommendations
-
-| Priority | Recommendation | Evidence |
-|---|---|---|
-| 1 — High | Plan aggressively for Q4 from September | Sep–Nov drove 35%+ of annual revenue; Sep +38.9% MoM is consistent |
-| 2 — High | Protect the Champions segment | 980 customers = 65.2% of identified-customer revenue; avg £5,667 spend |
-| 3 — High | Re-engage At Risk customers | 526 customers, £730k spend history, ~4 months inactive |
-| 4 — Medium | Convert guest buyers to accounts | Guest orders cannot be tracked for retention or remarketing |
-| 5 — Medium | Investigate Netherlands/Australia as wholesale channels | £2,929 and £2,331 AOV respectively vs £518 UK average |
-| 6 — Medium | Nurture Recent segment into Loyal | 233 customers, bought within 18 days, only 1 order each |
+| High | Investigate what drives Champions and protect that segment | 980 customers = 65.2% of revenue, avg 10.8 orders | Scores are relative to this dataset only |
+| High | Build a re-engagement programme for At Risk customers | 526 customers, £730k historical spend, ~4 months quiet | Observation window limits; some may have churned before Dec 2010 |
+| High | Request prior years' data before committing to Q4 planning assumptions | Sep–Nov revenue ramp is strong within this dataset | Single year — cannot confirm this pattern repeats annually |
+| Medium | Investigate Netherlands, Australia, EIRE as potential wholesale channels | Very high AOV relative to order count in all three | Cannot confirm account type from transaction data alone |
+| Medium | Introduce account creation incentives for guest buyers | 16.5% of revenue has no CustomerID — invisible to retention analysis | |
+| Medium | Nurture the Recent segment before they go cold | 233 customers, bought within 18 days, only 1 order each | |
+| Lower | Investigate consistently high cancellation rate | 16% of all invoices — consistent across months | Cause is unknown without further data |
+| Lower | Review top return-rate products with operations team | Small number of products driving high return volume | Return rates >100% need domain knowledge to interpret |
 | 7 — Lower | Investigate 17.1% cancellation rate | Consistent across months — structural cause rather than isolated events |
 | 8 — Lower | Review top return-rate products | Small number of products driving disproportionate returns and complaints |
