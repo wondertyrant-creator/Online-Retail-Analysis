@@ -33,8 +33,7 @@ online-retail-analysis/
 ├── online_retail_dashboard.pbix  — Power BI dashboard
 ├── README.md                     — this file
 ├── INSIGHTS.md                   — detailed business findings and recommendations
-├── CODE_EXPLAINED.md             — CTEs and window functions explained line by line
-└── DAX_MEASURES.md               — all Power BI DAX measures with usage notes
+├── Images folder
 ```
 
 ---
