@@ -37,7 +37,13 @@ online-retail-analysis/
 ```
 
 ---
+## Limitations
 
+- The dataset covers a single 13-month period (Dec 2010–Dec 2011), so seasonal patterns cannot be confirmed.
+- December 2011 contains only 9 days of data and should not be compared directly with other months.
+- Around 25% of transactions have no CustomerID, limiting customer-level analyses such as retention and RFM.
+- Return rates above 100% can occur because returns may relate to purchases made before the observation period.
+  
 ## How to Run
 
 ### MySQL
