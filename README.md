@@ -1,6 +1,5 @@
 # Online Retail SQL & Power BI Analysis
-
-End-to-end data analysis project using a real e-commerce dataset. Built a MySQL analytics pipeline from raw data to a three-page Power BI dashboard, covering data cleaning, RFM customer segmentation, product performance, and revenue concentration analysis.
+Built an end-to-end retail analytics solution using MySQL and Power BI to analyse over 540,000 e-commerce transactions from a UK retailer. Designed a complete SQL reporting pipeline with data cleaning, RFM customer segmentation, revenue concentration analysis, and analytical views before developing a three-page interactive dashboard that delivers actionable insights into sales performance, customer behaviour, and product trends.
 
 ---
 
