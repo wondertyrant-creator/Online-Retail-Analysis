@@ -34,16 +34,12 @@ CREATE TABLE raw_orders (
     customerid  VARCHAR(50),
     country     VARCHAR(100) 
 );
- -- STOP HERE AND IMPORT data.csv BEFORE CONTINUING
--- Right-click raw_orders in the left panel
--- → Table Data Import Wizard → select data.csv → Finish
--- Then continue running the rest of this script
 -- ============================================================
 -- DATA IMPORT VIA AUTOMATED SCRIPT
 -- Bypasses the Import Wizard limitations.
 -- Parses dates into standard SQL format dynamically on ingestion.
 -- ============================================================
-LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/data.csv' 
+LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/data.csv' --change path to where you saved the data
 INTO TABLE raw_orders
 CHARACTER SET latin1 
 FIELDS TERMINATED BY ',' 
