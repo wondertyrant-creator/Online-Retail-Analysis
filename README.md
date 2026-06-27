@@ -1,5 +1,7 @@
+
 # Online Retail SQL & Power BI Analysis
-Built an end-to-end retail analytics solution using MySQL and Power BI to analyse over 540,000 e-commerce transactions from a UK retailer. Designed a complete SQL reporting pipeline with data cleaning, RFM customer segmentation, revenue concentration analysis, and analytical views before developing a three-page interactive dashboard that delivers actionable insights into sales performance, customer behaviour, and product trends.
+
+End-to-end data analysis project using a real e-commerce dataset. Built a MySQL analytics pipeline from raw data to a three-page Power BI dashboard, covering data cleaning, RFM customer segmentation, product performance, and revenue concentration analysis.
 
 ---
 
@@ -7,14 +9,15 @@ Built an end-to-end retail analytics solution using MySQL and Power BI to analys
 
 | Tool | Purpose |
 |---|---|
-| MySQL Workbench | Data cleaning, transformation, analysis |
+| MySQL 8.0 | Data cleaning, transformation, and analysis |
+| MySQL Workbench | Query development and execution |
 | Power BI Desktop | Interactive dashboard and visualisation |
 
 ---
 
 ## Dataset
 
-**Source:** https://www.kaggle.com/datasets/carrie1/ecommerce-data/data
+**Source:** UCI Online Retail Dataset — publicly available at the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/352/online+retail)
 
 **Coverage:** December 2010 – December 2011 (13 months)
 **Raw rows:** 541,909 transaction lines
@@ -33,23 +36,19 @@ online-retail-analysis/
 ├── online_retail_dashboard.pbix  — Power BI dashboard
 ├── README.md                     — this file
 ├── INSIGHTS.md                   — detailed business findings and recommendations
-├── Images folder
+├── SQL_CODE.md                   — every SQL section explained line by line
+└── DAX_MEASURES.md               — all Power BI DAX measures with usage notes
 ```
 
 ---
-## Limitations
 
-- The dataset covers a single 13-month period (Dec 2010–Dec 2011), so seasonal patterns cannot be confirmed.
-- December 2011 contains only 9 days of data and should not be compared directly with other months.
-- Around 25% of transactions have no CustomerID, limiting customer-level analyses such as retention and RFM.
-- Return rates above 100% can occur because returns may relate to purchases made before the observation period.
-  
 ## How to Run
 
 ### MySQL
 
 1. Open MySQL Workbench and create a schema called `online_retail`
 2. Run the `CREATE TABLE raw_orders` block from the script
+3. Right-click `raw_orders` → **Table Data Import Wizard** → select `data.csv` → Finish
 4. Run the rest of the script — it builds all tables, indexes, and views automatically
 
 ### Power BI
@@ -63,17 +62,19 @@ online-retail-analysis/
 
 ## Data Cleaning Decisions
 
-Every exclusion is documented in the SQL script with inline comments. Summary:
+Every exclusion is documented in the SQL script with inline comments.
 
-| Decision | Rows Excluded | Reason |
+| Decision | Rows Affected | Reason |
 |---|---|---|
-| Cancelled invoices (`invoiceno LIKE 'C%'`) | 9,288 | Represent order reversals, not sales |
-| Negative or zero quantities | 1,336 | Returns logged without cancellation prefix |
-| Zero or invalid unit prices | 43,887 | Includes empty values, samples, and data entry errors — `CAST` to DECIMAL returns 0 for non-numeric entries, all are excluded |
-| Null CustomerIDs labelled Guest | 135,080 | Included in revenue totals, excluded from customer-level analysis |
-| Non-product stock codes excluded from product views | — | POST, DOT, M, AMAZONFEE etc. are operational charges not products |
+| Truly invalid rows excluded at table level | 2,521 | Blank or non-parseable fields |
+| Cancellation invoices retained but tracked | 9,288 | Kept in `clean_orders`, filtered at view level so each view's logic is explicit |
+| Null CustomerIDs labelled Guest | ~135,000 | Included in revenue totals, excluded from customer-level analysis |
+| Non-product stock codes excluded from product views | — | POST, DOT, M, AMAZONFEE etc. are charges not products |
+| Net revenue used for product and customer ranking | — | Gross revenue from transactions later reversed by returns misrepresents performance |
 
-**Result:** 487,398 clean rows retained — **89.9%** of the raw dataset.
+**Result:** 539,388 clean rows retained — **99.5%** of the raw dataset.
+
+Keeping cancellations in `clean_orders` rather than excluding them at the table level is a deliberate choice. It means each view decides what to filter, making the business logic visible and auditable in one place rather than hidden inside the cleaning step.
 
 ---
 
@@ -84,15 +85,15 @@ Thirteen SQL views built on `clean_orders`:
 | View | What it answers |
 |---|---|
 | `vw_monthly_revenue` | Revenue and order count with month-on-month growth rate |
-| `vw_top_products` | Top 20 products by revenue (excl. non-products) |
-| `vw_top_customers` | Top 20 customers by total spend |
+| `vw_top_products` | Top 20 products by net revenue (excl. non-products) |
+| `vw_top_customers` | Top 20 customers by net spend |
 | `vw_revenue_by_country` | Revenue, order count, and share by country |
 | `vw_customer_segments` | One-time vs repeat buyer revenue split |
 | `vw_rfm` | Full RFM scores and segment per identified customer |
 | `vw_rfm_summary` | Segment-level totals, averages, and customer counts |
 | `vw_returns_overview` | Cancelled order count and value by month |
 | `vw_avg_order_value` | AOV and units per order by month |
-| `vw_product_return_rate` | Return rate per product by units |
+| `vw_product_return_rate` | Net revenue and return rate per product |
 | `vw_basket_size_by_month` | Items and lines per order over time |
 | `vw_basket_size_by_country` | Order size comparison across countries |
 | `vw_revenue_concentration` | Pareto analysis — revenue share by customer decile |
@@ -105,10 +106,10 @@ Thirteen SQL views built on `clean_orders`:
 Three-page interactive dashboard with date, year, and quarter slicers synced across all pages. Visuals built from `clean_orders` respond to slicers; pre-aggregated views display all-time figures.
 
 **Page 1 — Executive Overview**
-Total revenue · Total orders · AOV · Unique customers · Monthly revenue and AOV trend · Revenue by country · Guest vs identified split by month · Repeat vs one-time customer donut
+Total revenue · Total orders · AOV · Unique customers · Monthly revenue and AOV trend · Revenue by country · Guest vs identified split · Repeat vs one-time customer donut
 
 **Page 2 — Product Analysis**
-Total revenue · Avg lines per order · Avg items per order · Total products · Top products by revenue · Avg items per order by month · Products by units returned
+Total revenue · Avg lines per order · Avg items per order · Total products · Top products by net revenue · Avg items per order by month · Products by return rate
 
 **Page 3 — Customer Analysis**
 Repeat customer rate · At risk customers · Cancellation rate · Top 20% revenue share · RFM segment revenue · Revenue concentration by decile · Customers by segment
@@ -117,16 +118,16 @@ Repeat customer rate · At risk customers · Cancellation rate · Top 20% revenu
 
 ## Key Findings
 
-- **£10.27M** total revenue from **19,812 orders** across 13 months
-- **Q4 seasonality** is strong — November 2011 peaked at £1.46M with +31.9% MoM; the Q4 ramp began in September (+38.9%)
-- **UK dominates** at 84.6% of revenue; the Netherlands averages **£2,929 per order** vs £518 for the UK — strongly suggesting wholesale accounts
-- **Repeat buyers** are 65.4% of identified customers but drive **93% of identified-customer revenue**, spending 7× more on average (£2,802 vs £394)
-- **Champions segment** — 980 customers (23%) but **65.2% of identified-customer revenue** at an average of £5,667 per customer
-- **Top 20% of customers** account for **75% of total revenue** — the Pareto principle holds strongly
-- **526 At Risk customers** averaged 3.7 orders historically but haven't bought in ~4 months — representing £730k in potentially recoverable revenue
-- **17.4% cancellation rate** is consistent across months, suggesting structural causes rather than isolated events
-- **Average order value: £518** — higher than typical retail, consistent with wholesale buying behaviour (avg 222 units per order)
-- **Guest orders** contribute significant monthly revenue but cannot be tracked for retention analysis
+- **£9.77M** total revenue from **19,960 orders** across 13 months
+- **Product ranking uses net revenue** — one product (PAPER CRAFT, LITTLE BIRDIE) generated £168k gross from a single bulk order but was almost entirely returned, correctly dropping it from the top products list
+- **Return rates for top products are 1.5%–6.8%** — healthy and consistent with a functioning wholesale operation
+- **Q4 revenue ramp is pronounced in this dataset** — November peaked at £1.46M (+36.5% MoM) after a September surge of +44.7%. With one year of data, this cannot be confirmed as a recurring annual pattern
+- **UK dominates** at 84.0% of revenue; the Netherlands averages **£3,028 per order** vs £455 for the UK — consistent with wholesale accounts
+- **Repeat buyers** are 65.1% of identified customers but drive **93.8% of revenue**, spending 8.2× more on average (£2,738 vs £335)
+- **Champions segment** — 982 customers (22.7%) generate **67.7% of identified-customer revenue** at an average of £5,730 each
+- **Top 20% of customers account for 73.8% of revenue** — highly concentrated, creating concentration risk
+- **526 At Risk customers** averaged 3.8 orders but haven't bought in ~4 months — £688k of spend that has gone quiet
+- **Some customers show negative net revenue** — a small number returned more than they purchased within the observation window, visible in the RFM analysis
 
 Full findings with data tables and recommendations: see [INSIGHTS.md](./INSIGHTS.md)
 
@@ -149,6 +150,7 @@ Full findings with data tables and recommendations: see [INSIGHTS.md](./INSIGHTS
 - `CREATE INDEX` on `order_date`, `year_month`, `customer_id`, `country`
 - `DATE_FORMAT`, `MONTHNAME`, `QUARTER` for date component extraction
 
+---
 
 ## DAX Techniques Used
 
@@ -161,5 +163,5 @@ Full findings with data tables and recommendations: see [INSIGHTS.md](./INSIGHTS
 - `ALL` to remove filter context for percentage-of-total calculations
 - `FORMAT` to output numbers as formatted percentage strings
 - `AND` function for combining multiple conditions inside `FILTER`
-- Conditional measures using `CALCULATE` with inline filter arguments (e.g. `rfm_segment = "Champions"`)
+- Conditional measures using `CALCULATE` with inline filter arguments
 - `_Measures` table to centralise all measures separate from data tables
