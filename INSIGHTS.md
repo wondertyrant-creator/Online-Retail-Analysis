@@ -55,7 +55,7 @@ All figures are derived from the SQL views built on the cleaned dataset (539,388
 
 ## Dashboard — Executive Overview
 
-![Executive Overview](Executive_Overview.png)
+![Executive Overview](Images/Executive_Overview.png)
 
 ---
 
