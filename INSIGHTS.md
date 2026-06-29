@@ -122,7 +122,7 @@ All figures are derived from the SQL views built on the cleaned dataset (539,388
 
 ## Dashboard — Product Analysis
 
-![Product Analysis](Product_Analysis.png)
+![Product Analysis](Images/Product_Analysis.png)
 
 ---
 
@@ -242,7 +242,7 @@ All figures are derived from the SQL views built on the cleaned dataset (539,388
 
 ## Dashboard — Customer Analysis
 
-![Customer Analysis](Customer_Analysis.png)
+![Customer Analysis](Images/Customer_Analysis.png)
 
 ---
 
