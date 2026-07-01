@@ -31,6 +31,7 @@ End-to-end analytics project on a real UK e-commerce transaction dataset. A MySQ
 ### Customer Analysis
 
 ![Customer Analysis](Images/Customer_Analysis.png)
+
 ---
 
 ## Dataset
