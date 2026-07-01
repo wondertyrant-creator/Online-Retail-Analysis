@@ -1,9 +1,5 @@
 # Business Insights — Online Retail Analysis
 
-Findings below are drawn directly from the SQL view outputs (`vw_*` CSV exports) and the three Power BI dashboard pages. Where a dashboard figure could not be reconciled against a SQL view, that discrepancy is called out explicitly rather than resolved by assumption. December 2011 covers only 9 days of trading and is not directly comparable to other months.
-
----
-
 ## Executive Summary
 
 The business generated **£9,769,872** in net revenue from **19,960 orders** and **4,371 unique identified customers** (plus a Guest bucket) over 13 months (Dec 2010–Dec 2011). Revenue is heavily concentrated: the top 10% of identified customers generate 60.0% of identified-customer revenue, and a 982-customer "Champions" RFM segment alone accounts for 67.7% of it. The UK supplies 84.0% of all revenue, with a handful of very-high-AOV international accounts (Netherlands, Australia, EIRE) standing out as narrow but valuable relationships. Revenue rose sharply from September through November 2011 before the dataset's partial final month — a pattern that cannot be confirmed as seasonal without a second year of data.
