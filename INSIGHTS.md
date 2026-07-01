@@ -12,25 +12,19 @@ The business generated **£9,769,872** in net revenue from **19,960 orders** and
 
 ## KPI Analysis
 
-| KPI | Value | What it measures | Interpretation |
-|---|---|---|---|
-| Total Revenue | £9,769,872 | `Total Revenue = SUM('vw_fact_orders'[revenue])` — net of cancellations, no filters | Matches `vw_monthly_revenue`'s summed total and the Executive Overview card exactly |
-| Total Orders | 19,960 | `Total Orders = CALCULATE(DISTINCTCOUNT([invoice_no]), is_cancellation = 0)` | Matches the dashboard's "20K" rounded card and every SQL view's non-cancellation invoice count exactly |
-| Average Order Value | £489.47 | `AOV = DIVIDE([Total Revenue], [Total Orders])` | Independently re-derived (9,769,872.05 ÷ 19,960 = 489.47) — matches the card exactly |
-| Avg Items per Order | 279.98 | `DIVIDE([Total Items], [Total Orders])`, where `Total Items` sums non-cancellation `quantity` only | Independently re-derived by weighting each month's `avg_items_per_order` in `vw_avg_order_value` by that month's order count: 279.97 — matches to within rounding |
-| Avg Lines per Order | 26.56 | `DIVIDE(COUNTROWS(fact, is_cancellation=0), [Total Orders])` | Same logic as `vw_basket_size_by_month`'s `avg_lines_per_order`, aggregated across the full period rather than by month |
-| Unique Customers | 4,371 | `CALCULATE(DISTINCTCOUNT(customer_id), is_guest = 0)` | Matches the dashboard card and `vw_dim_customer` (4,372 rows total, minus the single Guest row) |
-| Repeat Customer Rate | 65.09% | `DISTINCTCOUNT(customer_id, customer_type="Repeat buyer") / DISTINCTCOUNT(customer_id, is_guest=0)` | Independently re-derived from `vw_customer_segments` (2,845 repeat ÷ 4,371 identified = 65.09%) — exact match |
-| At Risk Customers | 526 | `CALCULATE(DISTINCTCOUNT(customer_id), rfm_segment="At Risk")` | Matches `vw_rfm`'s At Risk count exactly |
-| Guest Revenue % | 15.0% (independently computed; not shown as a labelled card in the supplied screenshots) | `[Guest Revenue] / [Total Revenue]`, both unfiltered by cancellation status | Matches `vw_guest_vs_identified`'s summed guest share (£1,469,806 ÷ £9,769,872 = 15.04%) exactly |
-| Cancellation Rate | 16.12% | `DIVIDE([Cancelled Orders], [Cancelled Orders] + [Total Orders])`, both counting distinct invoices off `vw_fact_orders.is_cancellation` | Fully traceable to the fact table's flag — no separate SQL "returns" view is needed. The implied cancelled-invoice count (≈3,836) is consistent with the 9,288 cancellation line items retained in `clean_orders` (≈2.4 lines per cancelled invoice, well below the ≈26 lines on a typical purchase order — plausible, since cancellations are often partial) |
-| Return Rate % | Not shown as a labelled card in the supplied screenshots | `DIVIDE([Units Returned], [Total Items])` — an **aggregate**, business-wide ratio (total units returned ÷ total units sold across the whole catalogue) | This is a different metric from `vw_product_return_rate`'s **per-product** rate. The per-product view can exceed 100% for individual low-volume items (see Key Insight 7) because a single product's returns can outstrip its in-window sales; the aggregate measure divides returns by the *entire catalogue's* item volume, so it cannot exhibit the same artefact and should be read as a genuinely different (and safer) headline figure |
-| Total Products | 3,814 (dashboard) vs 3,813 (recomputed from `vw_dim_product.csv`, `is_product=1`) | `CALCULATE(DISTINCTCOUNT(stock_code), is_product=1)` | A 1-product gap, most plausibly explained by a snapshot-timing difference between the CSV export and the live dashboard's data refresh rather than a methodology difference — both use the same `is_product` flag |
-| Top 20% Revenue Share | 77.70% (dashboard card) | `DIVIDE(CALCULATE([Total Revenue], revenue_decile <= 2), [Total Revenue])` | Does not reconcile with `vw_revenue_concentration`'s decile 1+2 result (73.8%) under any tested interpretation. See the KPI Validation appendix for the full investigation |
+| KPI | Value | Business Significance |
+|---|---|---|
+| Total Revenue | £9.77M | Net revenue after cancellations across the 13-month period. |
+| Total Orders | 19,960 | Purchase invoices only; cancellations excluded. |
+| Average Order Value | £489.47 | Customers spend nearly £500 per order on average — consistent with wholesale, not retail, buying behaviour. |
+| Unique Customers | 4,371 | Identified customer accounts, excluding the Guest bucket. |
+| Repeat Customer Rate | 65.1% | Most identified customers return, supporting a retention-focused growth strategy. |
+| At Risk Customers | 526 | A meaningful group of previously engaged customers has gone quiet and is still recoverable. |
+| Guest Revenue | 15.0% | A meaningful share of revenue cannot be tied to individual customers, limiting retention and personalisation efforts. |
+| Cancellation Rate | 16.1% | Cancellation activity is significant enough to monitor over time. |
+| Top 20% Revenue Share | 77.7% | Revenue is highly concentrated in a small group of top customers — a concentration risk as much as an opportunity. This figure does not reconcile with the SQL layer's own decile calculation (73.8%); see the appendix. |
 
-### Note on the Top 20% Revenue Share figure
-
-The KPI (77.70%) could not be reconciled against the SQL layer (`vw_revenue_concentration`'s 73.8%) despite multiple validation attempts. The investigation is documented in the appendix for transparency.
+*Full DAX definitions, formulas, and independent recalculations for every KPI above are in the appendix, for anyone who wants to verify the numbers rather than take them on faith.*
 
 ---
 
@@ -162,9 +156,13 @@ None reproduces 77.70%. Reverse-solving for the numerator that would produce 77.
 
 ### Other KPIs independently re-derived
 
-- **AOV** (£489.47): £9,769,872.05 ÷ 19,960 orders = 489.47. Exact match.
+- **Total Revenue** (£9,769,872): `SUM('vw_fact_orders'[revenue])`, no filters. Matches `vw_monthly_revenue`'s summed total exactly.
+- **Total Orders** (19,960): `CALCULATE(DISTINCTCOUNT(invoice_no), is_cancellation = 0)`. Matches every SQL view's non-cancellation invoice count exactly.
+- **AOV** (£489.47): `DIVIDE([Total Revenue], [Total Orders])` = £9,769,872.05 ÷ 19,960 orders = 489.47. Exact match.
 - **Avg Items per Order** (279.98): weighting each month's `avg_items_per_order` from `vw_avg_order_value` by that month's order count gives 279.97. Match within rounding.
-- **Repeat Customer Rate** (65.09%): 2,845 repeat buyers ÷ 4,371 identified customers (`vw_customer_segments`) = 65.09%. Exact match.
-- **Guest Revenue %** (15.0%): £1,469,806 ÷ £9,769,872.05 (`vw_guest_vs_identified`, summed) = 15.04%. Exact match.
+- **Unique Customers** (4,371): `CALCULATE(DISTINCTCOUNT(customer_id), is_guest = 0)`. Matches `vw_dim_customer` (4,372 rows total, minus the single Guest row).
+- **Repeat Customer Rate** (65.09%): `DISTINCTCOUNT(customer_id, customer_type="Repeat buyer") / DISTINCTCOUNT(customer_id, is_guest=0)` = 2,845 repeat buyers ÷ 4,371 identified customers (`vw_customer_segments`) = 65.09%. Exact match.
+- **At Risk Customers** (526): `CALCULATE(DISTINCTCOUNT(customer_id), rfm_segment="At Risk")`. Matches `vw_rfm`'s At Risk count exactly.
+- **Guest Revenue %** (15.0%): `[Guest Revenue] / [Total Revenue]` = £1,469,806 ÷ £9,769,872.05 (`vw_guest_vs_identified`, summed) = 15.04%. Exact match.
 - **RFM segment revenue/counts**: independently recomputed from `vw_rfm.csv` and matched the dashboard's revenue-by-segment bar chart and customer-count donut exactly.
-- **Cancellation Rate** (16.12%): implies ≈3,836 cancelled invoices, consistent with the 9,288 cancellation line items in `clean_orders` (≈2.4 lines per cancelled invoice, versus ≈26 lines on a typical purchase order).
+- **Cancellation Rate** (16.12%): `DIVIDE([Cancelled Orders], [Cancelled Orders] + [Total Orders])`, both counting distinct invoices off `vw_fact_orders.is_cancellation`. Implies ≈3,836 cancelled invoices, consistent with the 9,288 cancellation line items in `clean_orders` (≈2.4 lines per cancelled invoice, versus ≈26 lines on a typical purchase order).
