@@ -20,7 +20,6 @@ The business generated **£9,769,872** in net revenue from **19,960 orders** and
 | Cancellation Rate | 16.1% | Cancellation activity is significant enough to monitor over time. |
 | Top 20% Revenue Share | 77.7% | Revenue is highly concentrated in a small group of top customers — a concentration risk as much as an opportunity. This figure does not reconcile with the SQL layer's own decile calculation (73.8%); see the appendix. |
 
-*Full DAX definitions, formulas, and independent recalculations for every KPI above are in the appendix, for anyone who wants to verify the numbers rather than take them on faith.*
 
 ---
 
