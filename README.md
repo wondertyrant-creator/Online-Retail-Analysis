@@ -86,8 +86,6 @@ No other table relationships are declared in the script; none are assumed beyond
 | **DAX** | Dashboard measures (e.g. repeat customer rate, cancellation rate, top 20% revenue share) — confirmed by the KPI cards visible on each dashboard page |
 | **GitHub** | Version control and portfolio hosting |
 
-> Power Query's role could not be confirmed from the artefacts provided (no M code was supplied) — the transformation logic that can be verified lives entirely in the SQL layer.
-
 ---
 
 ## Data Preparation
