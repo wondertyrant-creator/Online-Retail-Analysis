@@ -82,19 +82,7 @@ Revenue is bifurcated between broad-based and narrow-but-high-value markets:
 
 - **Broad-based:** UK (3,950 customers, £455.63 AOV), Germany (95 customers), France (88 customers) — closer to a conventional retail/mixed-buyer spread.
 - **Narrow, high-value:** Netherlands (9 customers, £3,028 AOV), Australia (9 customers, £2,405 AOV), EIRE (4 customers, £914 AOV) — consistent with a small number of large trade accounts. Losing a single Netherlands or EIRE customer would have a materially larger proportional impact than losing a single UK customer.
-
----
-
-## Dashboard Interpretation
-
-**Page 1 — Executive Overview.** Start with the four KPI cards for a snapshot, then use the combo chart (Total Revenue vs AOV by month) to check whether a revenue swing is being driven by order volume or order size — the two lines diverge noticeably in H1 2011, confirming volume/size are moving somewhat independently that period. The country bar chart and the guest/identified area chart share the same underlying revenue base, so a spike in one should be checked against the other (e.g. the November guest revenue spike is visible in the area chart but not obviously in the country bar, since Guest activity is spread across countries).
-
-**Page 2 — Product Analysis.** The "Total Revenue by description" bar chart is filtered to `is_product = 1`, so postage, fees, and admin codes are correctly excluded — a business user comparing this to a raw revenue total elsewhere should expect it to be lower for that reason, not treat it as an error. The "Units Returned by description" chart ranks by absolute volume, not return rate — a product can appear here with a high unit count while still having a low return rate relative to its (much larger) sales volume, so this chart should be read alongside the return-rate view rather than in isolation.
-
-**Page 3 — Customer Analysis.** The RFM revenue bar chart and the RFM customer-count donut should be read together: Inactive is the largest segment by customer count (34.65%) but one of the smallest by revenue, while Champions is a mid-sized segment by count (22.64%) but by far the largest by revenue — the visual pairing makes that imbalance immediately clear. The cumulative-revenue-by-decile line chart answers "what % of revenue comes from the top X% of customers" directly off the curve (roughly 74% by decile 2), which reads lower than the "Top 20% Revenue Share" KPI card above it (77.70%) — the two don't fully reconcile (see the KPI Analysis appendix), so treat them as directionally consistent rather than expecting an exact match.
-
-**Filter behaviour.** All three pages share the same date-range slider plus quarter/year slicers. Because December 2011 is only 9 days of data, any filtered view that isolates December in isolation (rather than as part of a full year) will understate that month relative to others — this applies to every page.
-
+  
 ---
 
 ## Recommendations
