@@ -112,7 +112,6 @@ Revenue is bifurcated between broad-based and narrow-but-high-value markets:
 | Medium | Treat the Netherlands, Australia, and EIRE relationships as strategic accounts | AOV of £3,028 / £2,405 / £914 vs £455.63 for the UK, from very small customer counts (4–9 each) | Account type (wholesale vs retail) cannot be confirmed from transaction data alone |
 | Medium | Validate the Sep–Nov revenue ramp against a second year of data before committing to seasonal resourcing | +44.7% (Sep), +36.5% (Nov) MoM growth is compelling but is a single observed cycle | Cannot be distinguished from a one-off pattern without additional years of data |
 | Medium | Verify the "Top 20% Revenue Share" KPI (77.70%) against the live Power BI model | Does not reconcile with `vw_revenue_concentration`'s decile 1+2 figure (73.8%) or any denominator/population combination tested against the supplied data | Calculation logic is known and legitimate; only the displayed value couldn't be reproduced from the exports provided |
-| Lower | Review the 8 customers with negative net monetary value individually | Combined –£2,818 across `vw_rfm`; small in aggregate but each is a net cost | Sample is small; may reflect legitimate returns, disputes, or data issues — cannot be determined from aggregated figures alone |
 
 ---
 
@@ -124,8 +123,7 @@ Revenue is bifurcated between broad-based and narrow-but-high-value markets:
 - **Return-rate denominators are window-bound.** Products purchased before December 2010 but returned within the observation window will show inflated return rates, since only in-window sales are counted as the denominator. This is visible directly in the data (several products exceed 100% return rate) and affects the low-volume tail of `vw_product_return_rate` specifically, not the top-revenue products (which don't appear in that view's current top-20 cut).
 - **The "Top 20% Revenue Share" KPI (77.70%) does not reconcile with the SQL views supplied.** The calculation logic is known and legitimate, but the displayed value couldn't be reproduced from the exports provided — see the KPI Analysis section and appendix.
 - **Correlation, not causation.** All findings describe patterns present in the data. Explanations offered for *why* those patterns exist (e.g. wholesale buyer behaviour, seasonal demand) are reasonable interpretations, not conclusions the data itself proves.
-- **Product return rates should be interpreted with caution.** Several low-volume products show return rates above 100%, because returns recorded during the analysis period can relate to purchases made before the dataset begins. This is a limitation of the observation window rather than evidence of unusually high return behaviour. The highest-revenue products do not appear among the highest-return-rate products, so the return performance of best-selling items would require a separate analysis.
-- **A small number of customers have negative net monetary value.** 8 identified customers show negative `monetary` totals in `vw_rfm` (combined –£2,818), meaning their cancellations exceeded their purchases within the observation window. All 8 are scored `m_score = 1` and fall into the Inactive segment. The value involved is small, but each represents a net cost rather than a contribution.
+- **Product return rates are affected by the observation window.** Returns recorded during the analysis period may relate to purchases made before December 2010, causing some low-volume products to exceed 100% return rates. This affects return-rate analysis but not overall revenue or cancellation metrics.
 ---
 
 ## Appendix: KPI Validation Notes
@@ -152,13 +150,4 @@ None reproduces 77.70%. Reverse-solving for the numerator that would produce 77.
 
 ### Other KPIs independently re-derived
 
-- **Total Revenue** (£9,769,872): `SUM('vw_fact_orders'[revenue])`, no filters. Matches `vw_monthly_revenue`'s summed total exactly.
-- **Total Orders** (19,960): `CALCULATE(DISTINCTCOUNT(invoice_no), is_cancellation = 0)`. Matches every SQL view's non-cancellation invoice count exactly.
-- **AOV** (£489.47): `DIVIDE([Total Revenue], [Total Orders])` = £9,769,872.05 ÷ 19,960 orders = 489.47. Exact match.
-- **Avg Items per Order** (279.98): weighting each month's `avg_items_per_order` from `vw_avg_order_value` by that month's order count gives 279.97. Match within rounding.
-- **Unique Customers** (4,371): `CALCULATE(DISTINCTCOUNT(customer_id), is_guest = 0)`. Matches `vw_dim_customer` (4,372 rows total, minus the single Guest row).
-- **Repeat Customer Rate** (65.09%): `DISTINCTCOUNT(customer_id, customer_type="Repeat buyer") / DISTINCTCOUNT(customer_id, is_guest=0)` = 2,845 repeat buyers ÷ 4,371 identified customers (`vw_customer_segments`) = 65.09%. Exact match.
-- **At Risk Customers** (526): `CALCULATE(DISTINCTCOUNT(customer_id), rfm_segment="At Risk")`. Matches `vw_rfm`'s At Risk count exactly.
-- **Guest Revenue %** (15.0%): `[Guest Revenue] / [Total Revenue]` = £1,469,806 ÷ £9,769,872.05 (`vw_guest_vs_identified`, summed) = 15.04%. Exact match.
-- **RFM segment revenue/counts**: independently recomputed from `vw_rfm.csv` and matched the dashboard's revenue-by-segment bar chart and customer-count donut exactly.
 - **Cancellation Rate** (16.12%): `DIVIDE([Cancelled Orders], [Cancelled Orders] + [Total Orders])`, both counting distinct invoices off `vw_fact_orders.is_cancellation`. Implies ≈3,836 cancelled invoices, consistent with the 9,288 cancellation line items in `clean_orders` (≈2.4 lines per cancelled invoice, versus ≈26 lines on a typical purchase order).
