@@ -19,7 +19,18 @@ End-to-end analytics project on a real UK e-commerce transaction dataset. A MySQ
 - Which products get returned most often, and how large is the impact of cancellations by month?
 
 **Intended audience.** Recruiters and hiring managers reviewing SQL and BI capability, and business stakeholders (e.g. sales/ops leads at a similar retailer) who would use the dashboard to monitor revenue health, customer loyalty, and product/return performance.
+---
+### Executive Overview
 
+![Executive Overview](Images/Executive_Overview.png)
+
+### Product Analysis
+
+![Product Analysis](Images/Product_Analysis.png)
+
+### Customer Analysis
+
+![Customer Analysis](Images/Customer_Analysis.png)
 ---
 
 ## Dataset
